@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Cours` ADD COLUMN `lieu` VARCHAR(191) NULL;

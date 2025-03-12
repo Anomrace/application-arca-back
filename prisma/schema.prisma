@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  student
+  parent
+  professor
+  admin
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  firstName  String
+  lastName   String
+  role       Role     @default(student)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations optionnelles selon le rôle
+  eleve      Eleve?      @relation("UserEleve")
+  professeur Professeur? @relation("UserProfesseur")
+}
+
+model Eleve {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  telephone  String?
+  
+  // Relation avec User (relation 1:1)
+  user       User     @relation("UserEleve", fields: [userId], references: [id])
+  
+  // Optionnel : relation avec un professeur
+  profId     String?  
+  professeur Professeur? @relation(fields: [profId], references: [id])
+  
+  cours      Cours[]
+  Facture    Facture[]
+}
+
+model Professeur {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  specialite  String?
+  telephone   String?
+  
+  // Relation avec User (relation 1:1)
+  user        User     @relation("UserProfesseur", fields: [userId], references: [id])
+  
+  eleves      Eleve[]
+  cours       Cours[]
+}
+
+model Cours {
+  id         String   @id @default(uuid())
+  date       DateTime
+  eleveId    String
+  eleve      Eleve    @relation(fields: [eleveId], references: [id], onDelete: Cascade)
+  profId     String
+  professeur Professeur @relation(fields: [profId], references: [id])
+  lieu       String?
+}
+
+model Facture {
+  id        String   @id @default(uuid())
+  clientId  String
+  amount    Float
+  reference String
+  filePath  String
+  createdAt DateTime @default(now())
+
+  client    Eleve    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
